@@ -1,0 +1,679 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎄 Świąteczna Maszyna Losująca</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @keyframes bounce-in {
+            0% { transform: scale(0); opacity: 0; }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px) rotate(-5deg); }
+            75% { transform: translateX(10px) rotate(5deg); }
+        }
+
+        @keyframes snowfall {
+            0% {
+                transform: translateY(-10px) translateX(0);
+                opacity: 0;
+            }
+            10% {
+                opacity: 1;
+            }
+            90% {
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(100vh) translateX(100px);
+                opacity: 0;
+            }
+        }
+
+        @keyframes twinkle {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(0.8); }
+        }
+
+        .bounce-in {
+            animation: bounce-in 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        }
+
+        .shake {
+            animation: shake 0.5s ease-in-out;
+        }
+
+        .snowflake {
+            position: fixed;
+            top: -10px;
+            color: white;
+            font-size: 1em;
+            animation: snowfall linear infinite;
+            pointer-events: none;
+            z-index: 1000;
+            text-shadow: 0 0 5px rgba(255,255,255,0.8);
+        }
+
+        .star {
+            animation: twinkle 2s ease-in-out infinite;
+        }
+
+        .participant-card {
+            transition: all 0.3s ease;
+        }
+
+        .participant-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        body {
+            background: linear-gradient(135deg, #1a472a 0%, #0f2922 100%);
+            min-height: 100vh;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        .christmas-bg {
+            background: linear-gradient(135deg, #c41e3a 0%, #0c5f31 100%);
+        }
+
+        .gold-text {
+            color: #ffd700;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .snow-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 999;
+        }
+
+        .christmas-ornament {
+            display: inline-block;
+            animation: twinkle 3s ease-in-out infinite;
+        }
+    </style>
+</head>
+<body class="p-4 md:p-8">
+    <!-- Snow overlay -->
+    <div class="snow-overlay" id="snow-container"></div>
+
+    <div class="max-w-2xl mx-auto">
+
+        <!-- Screen 1: Setup - Dodawanie uczestników -->
+        <div id="setup-screen" class="screen">
+            <div class="bg-white rounded-3xl shadow-2xl p-8 bounce-in" style="background: linear-gradient(135deg, #ffffff 0%, #f0f9ff 100%);">
+
+                <!-- Christmas Header -->
+                <div class="text-center mb-4">
+                    <div class="text-6xl mb-2">
+                        <span class="christmas-ornament">🎄</span>
+                    </div>
+                    <h1 class="text-4xl md:text-5xl font-bold mb-2 christmas-bg bg-clip-text text-transparent">
+                        Świąteczna Maszyna Losująca
+                    </h1>
+                    <div class="flex justify-center gap-2 text-2xl mb-2">
+                        <span class="star">⭐</span>
+                        <span class="star" style="animation-delay: 0.3s">✨</span>
+                        <span class="star" style="animation-delay: 0.6s">⭐</span>
+                    </div>
+                </div>
+
+                <p class="text-center text-gray-600 mb-8">Dodaj uczestników i rozpocznij losowanie prezentów!</p>
+
+                <!-- Formularz dodawania -->
+                <div class="mb-6">
+                    <div class="flex gap-2">
+                        <input
+                            type="text"
+                            id="participant-input"
+                            placeholder="Wpisz imię uczestnika..."
+                            class="flex-1 px-4 py-3 border-2 border-green-400 rounded-xl focus:outline-none focus:border-red-500 text-lg"
+                            autocomplete="off"
+                        >
+                        <button
+                            onclick="addParticipant()"
+                            class="bg-gradient-to-r from-red-600 to-green-600 text-white px-6 py-3 rounded-xl font-bold hover:from-red-700 hover:to-green-700 transition-all transform hover:scale-105"
+                        >
+                            ➕ Dodaj
+                        </button>
+                    </div>
+                    <p class="text-sm text-gray-500 mt-2">Minimum 2 osoby potrzebne do losowania</p>
+                </div>
+
+                <!-- Lista uczestników -->
+                <div id="participants-list" class="mb-6 space-y-2">
+                    <!-- Dynamicznie dodawane karty uczestników -->
+                </div>
+
+                <!-- Przycisk rozpoczęcia -->
+                <button
+                    id="start-button"
+                    onclick="startDrawing()"
+                    disabled
+                    class="w-full bg-gradient-to-r from-green-600 to-red-600 text-white px-8 py-4 rounded-xl font-bold text-xl hover:from-green-700 hover:to-red-700 transition-all transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none shadow-lg"
+                >
+                    🎅 ROZPOCZNIJ LOSOWANIE! 🎁
+                </button>
+            </div>
+        </div>
+
+        <!-- Screen 2: Drawing - Losowanie -->
+        <div id="drawing-screen" class="screen hidden">
+            <div class="bg-white rounded-3xl shadow-2xl p-8 bounce-in" style="background: linear-gradient(135deg, #ffffff 0%, #f0f9ff 100%);">
+                <!-- Christmas decoration -->
+                <div class="text-center mb-4">
+                    <div class="flex justify-center gap-4 text-3xl">
+                        <span class="star">🎄</span>
+                        <span class="star" style="animation-delay: 0.2s">⛄</span>
+                        <span class="star" style="animation-delay: 0.4s">🎄</span>
+                    </div>
+                </div>
+
+                <!-- Progress -->
+                <div class="mb-6">
+                    <div class="flex justify-between text-sm text-gray-600 mb-2">
+                        <span>Postęp</span>
+                        <span id="progress-text">0/0</span>
+                    </div>
+                    <div class="w-full bg-gray-200 rounded-full h-3 shadow-inner">
+                        <div id="progress-bar" class="bg-gradient-to-r from-red-600 to-green-600 h-3 rounded-full transition-all duration-500 shadow-md" style="width: 0%"></div>
+                    </div>
+                </div>
+
+                <!-- Osoba losująca -->
+                <div class="text-center mb-8">
+                    <p class="text-lg text-gray-600 mb-2">Teraz kolej na:</p>
+                    <h2 id="current-person" class="text-5xl font-bold christmas-bg bg-clip-text text-transparent mb-1">
+                        ---
+                    </h2>
+                    <p class="text-3xl">🎅</p>
+                </div>
+
+                <!-- Wynik losowania (ukryty początkowo) -->
+                <div id="result-container" class="hidden mb-8">
+                    <div class="bg-gradient-to-r from-red-100 to-green-100 rounded-2xl p-6 text-center border-4 border-dashed border-red-400 shadow-lg">
+                        <p class="text-xl text-gray-700 mb-2">Kupujesz prezent dla:</p>
+                        <p id="drawn-person" class="text-4xl font-bold text-red-700 mb-2">---</p>
+                        <p class="text-4xl">🎁</p>
+                        <div class="flex justify-center gap-2 mt-2 text-xl">
+                            <span class="star">✨</span>
+                            <span class="star" style="animation-delay: 0.3s">⭐</span>
+                            <span class="star" style="animation-delay: 0.6s">✨</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Przyciski -->
+                <div class="space-y-3">
+                    <button
+                        id="draw-button"
+                        onclick="performDraw()"
+                        class="w-full bg-gradient-to-r from-red-600 to-green-600 text-white px-8 py-4 rounded-xl font-bold text-xl hover:from-red-700 hover:to-green-700 transition-all transform hover:scale-105 shadow-lg"
+                    >
+                        🎲 LOSUJ! 🎲
+                    </button>
+
+                    <button
+                        id="next-button"
+                        onclick="nextPerson()"
+                        class="hidden w-full bg-gradient-to-r from-green-600 to-emerald-700 text-white px-8 py-4 rounded-xl font-bold text-xl hover:from-green-700 hover:to-emerald-800 transition-all transform hover:scale-105 shadow-lg"
+                    >
+                        Zrozumiałem/am, przekaż dalej! →
+                    </button>
+                </div>
+
+                <!-- Przycisk powrotu -->
+                <button
+                    onclick="resetToSetup()"
+                    class="w-full mt-4 text-gray-500 hover:text-gray-700 py-2 text-sm"
+                >
+                    ← Wróć do edycji listy
+                </button>
+            </div>
+        </div>
+
+        <!-- Screen 3: Complete - Zakończenie -->
+        <div id="complete-screen" class="screen hidden">
+            <div class="bg-white rounded-3xl shadow-2xl p-8 text-center bounce-in" style="background: linear-gradient(135deg, #ffffff 0%, #f0f9ff 100%);">
+                <div class="text-8xl mb-4">
+                    <span class="christmas-ornament">🎄</span>
+                </div>
+                <h2 class="text-4xl md:text-5xl font-bold christmas-bg bg-clip-text text-transparent mb-4">
+                    Wszyscy wylosowali!
+                </h2>
+                <p class="text-xl text-gray-700 mb-4">
+                    Teraz wszyscy wiedzą komu kupić prezent!
+                </p>
+                <div class="flex justify-center gap-3 text-5xl mb-6">
+                    <span class="star">🎁</span>
+                    <span class="star" style="animation-delay: 0.2s">⛄</span>
+                    <span class="star" style="animation-delay: 0.4s">🎅</span>
+                    <span class="star" style="animation-delay: 0.6s">🔔</span>
+                </div>
+                <p class="gold-text text-2xl font-bold mb-8">
+                    ✨ Wesołych Świąt! ✨
+                </p>
+                <div class="space-y-3">
+                    <button
+                        onclick="showSummary()"
+                        class="w-full bg-gradient-to-r from-yellow-500 to-orange-600 text-white px-8 py-4 rounded-xl font-bold text-xl hover:from-yellow-600 hover:to-orange-700 transition-all transform hover:scale-105 shadow-lg"
+                    >
+                        📋 Pokaż podsumowanie (tylko dla organizatora!)
+                    </button>
+                    <button
+                        onclick="resetAll()"
+                        class="w-full bg-gradient-to-r from-red-600 to-green-600 text-white px-8 py-4 rounded-xl font-bold text-xl hover:from-red-700 hover:to-green-700 transition-all transform hover:scale-105 shadow-lg"
+                    >
+                        🔄 Zacznij od nowa
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Screen 4: Summary - Podsumowanie -->
+        <div id="summary-screen" class="screen hidden">
+            <div class="bg-white rounded-3xl shadow-2xl p-8 bounce-in" style="background: linear-gradient(135deg, #ffffff 0%, #f0f9ff 100%);">
+                <div class="text-center mb-6">
+                    <div class="text-5xl mb-2">📋</div>
+                    <h2 class="text-3xl font-bold christmas-bg bg-clip-text text-transparent mb-2">
+                        Podsumowanie losowania
+                    </h2>
+                    <p class="text-sm text-red-600 font-semibold">⚠️ Nie pokazuj tego ekranu uczestnikom!</p>
+                </div>
+
+                <!-- Lista przypisań -->
+                <div id="summary-list" class="mb-6 space-y-2">
+                    <!-- Dynamicznie generowane -->
+                </div>
+
+                <!-- Przyciski -->
+                <div class="space-y-2">
+                    <button
+                        onclick="showScreen('complete-screen')"
+                        class="w-full bg-gradient-to-r from-green-600 to-emerald-600 text-white px-6 py-3 rounded-xl font-bold hover:from-green-700 hover:to-emerald-700 transition-all transform hover:scale-105 shadow-lg"
+                    >
+                        ← Wróć
+                    </button>
+                    <button
+                        onclick="resetAll()"
+                        class="w-full bg-gray-600 text-white px-6 py-3 rounded-xl font-bold hover:bg-gray-700 transition-all shadow-lg"
+                    >
+                        🔄 Zacznij od nowa
+                    </button>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // State
+        let state = {
+            participants: [],
+            assignments: [],
+            currentIndex: 0,
+            hasDrawn: []
+        };
+
+        // Create snowfall effect
+        function createSnowfall() {
+            const container = document.getElementById('snow-container');
+            const snowflakeCount = 30;
+
+            for (let i = 0; i < snowflakeCount; i++) {
+                setTimeout(() => {
+                    const snowflake = document.createElement('div');
+                    snowflake.className = 'snowflake';
+                    snowflake.innerHTML = '❄';
+                    snowflake.style.left = Math.random() * 100 + '%';
+                    snowflake.style.fontSize = (Math.random() * 1 + 0.5) + 'em';
+                    snowflake.style.animationDuration = (Math.random() * 10 + 15) + 's';
+                    snowflake.style.animationDelay = Math.random() * 5 + 's';
+                    container.appendChild(snowflake);
+                }, i * 200);
+            }
+        }
+
+        // Load state from localStorage
+        function loadState() {
+            const saved = localStorage.getItem('secret-santa-state-christmas');
+            if (saved) {
+                state = JSON.parse(saved);
+            }
+        }
+
+        // Save state to localStorage
+        function saveState() {
+            localStorage.setItem('secret-santa-state-christmas', JSON.stringify(state));
+        }
+
+        // Initialize
+        function init() {
+            loadState();
+            renderParticipants();
+            updateStartButton();
+            createSnowfall();
+
+            // Enter key support
+            document.getElementById('participant-input').addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    addParticipant();
+                }
+            });
+        }
+
+        // Add participant
+        function addParticipant() {
+            const input = document.getElementById('participant-input');
+            const name = input.value.trim();
+
+            if (!name) {
+                return;
+            }
+
+            if (state.participants.includes(name)) {
+                alert('Ta osoba już jest na liście! 🎄');
+                input.value = '';
+                return;
+            }
+
+            state.participants.push(name);
+            input.value = '';
+            input.focus();
+
+            saveState();
+            renderParticipants();
+            updateStartButton();
+        }
+
+        // Remove participant
+        function removeParticipant(index) {
+            state.participants.splice(index, 1);
+            saveState();
+            renderParticipants();
+            updateStartButton();
+        }
+
+        // Render participants list
+        function renderParticipants() {
+            const list = document.getElementById('participants-list');
+
+            if (state.participants.length === 0) {
+                list.innerHTML = '<p class="text-center text-gray-400 py-8">Brak uczestników. Dodaj pierwszą osobę! 🎄</p>';
+                return;
+            }
+
+            const christmasColors = [
+                'from-red-500 to-red-600',
+                'from-green-600 to-green-700',
+                'from-red-600 to-green-600',
+                'from-emerald-500 to-teal-600',
+                'from-rose-500 to-red-600',
+                'from-lime-600 to-green-600'
+            ];
+
+            const christmasEmojis = ['🎅', '🎄', '⛄', '🎁', '🔔', '⭐', '❄️', '🦌'];
+
+            list.innerHTML = state.participants.map((name, index) => `
+                <div class="participant-card flex items-center justify-between bg-gradient-to-r ${christmasColors[index % christmasColors.length]} text-white px-4 py-3 rounded-xl shadow-md">
+                    <div class="flex items-center gap-3">
+                        <span class="text-2xl">${christmasEmojis[index % christmasEmojis.length]}</span>
+                        <span class="font-semibold text-lg">${escapeHtml(name)}</span>
+                    </div>
+                    <button
+                        onclick="removeParticipant(${index})"
+                        class="text-white hover:text-red-200 font-bold text-xl px-2"
+                    >
+                        ✕
+                    </button>
+                </div>
+            `).join('');
+        }
+
+        // Update start button state
+        function updateStartButton() {
+            const button = document.getElementById('start-button');
+            button.disabled = state.participants.length < 2;
+        }
+
+        // Start drawing process
+        function startDrawing() {
+            if (state.participants.length < 2) {
+                alert('Potrzeba minimum 2 osoby do losowania! 🎄');
+                return;
+            }
+
+            state.assignments = generateDerangement(state.participants);
+            state.currentIndex = 0;
+            state.hasDrawn = [];
+            saveState();
+
+            showScreen('drawing-screen');
+            updateDrawingScreen();
+        }
+
+        // Generate derangement
+        function generateDerangement(participants) {
+            const n = participants.length;
+            let attempts = 0;
+            const maxAttempts = 1000;
+
+            while (attempts < maxAttempts) {
+                const shuffled = [...participants];
+
+                for (let i = shuffled.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+                }
+
+                let isValid = true;
+                for (let i = 0; i < n; i++) {
+                    if (participants[i] === shuffled[i]) {
+                        isValid = false;
+                        break;
+                    }
+                }
+
+                if (isValid) {
+                    return shuffled;
+                }
+
+                attempts++;
+            }
+
+            const result = [...participants];
+            const first = result.shift();
+            result.push(first);
+            return result;
+        }
+
+        // Update drawing screen
+        function updateDrawingScreen() {
+            const currentPerson = state.participants[state.currentIndex];
+            document.getElementById('current-person').textContent = currentPerson;
+
+            const completed = state.hasDrawn.length;
+            const total = state.participants.length;
+            const percentage = (completed / total) * 100;
+
+            document.getElementById('progress-text').textContent = `${completed}/${total}`;
+            document.getElementById('progress-bar').style.width = `${percentage}%`;
+
+            document.getElementById('result-container').classList.add('hidden');
+            document.getElementById('draw-button').classList.remove('hidden');
+            document.getElementById('next-button').classList.add('hidden');
+        }
+
+        // Perform draw
+        function performDraw() {
+            const currentPerson = state.participants[state.currentIndex];
+            const drawnPerson = state.assignments[state.currentIndex];
+
+            const button = document.getElementById('draw-button');
+            button.classList.add('shake');
+            setTimeout(() => button.classList.remove('shake'), 500);
+
+            setTimeout(() => {
+                document.getElementById('drawn-person').textContent = drawnPerson;
+                document.getElementById('result-container').classList.remove('hidden');
+                document.getElementById('result-container').classList.add('bounce-in');
+
+                document.getElementById('draw-button').classList.add('hidden');
+                document.getElementById('next-button').classList.remove('hidden');
+
+                state.hasDrawn.push(currentPerson);
+                saveState();
+
+                const completed = state.hasDrawn.length;
+                const total = state.participants.length;
+                const percentage = (completed / total) * 100;
+                document.getElementById('progress-text').textContent = `${completed}/${total}`;
+                document.getElementById('progress-bar').style.width = `${percentage}%`;
+            }, 300);
+        }
+
+        // Next person
+        function nextPerson() {
+            state.currentIndex++;
+
+            if (state.currentIndex >= state.participants.length) {
+                showComplete();
+            } else {
+                updateDrawingScreen();
+            }
+        }
+
+        // Show complete screen
+        function showComplete() {
+            showScreen('complete-screen');
+            createChristmasConfetti();
+        }
+
+        // Create Christmas confetti
+        function createChristmasConfetti() {
+            const emojis = ['🎄', '❄️', '🎁', '⭐', '🔔', '🎅'];
+            const confettiCount = 40;
+
+            for (let i = 0; i < confettiCount; i++) {
+                setTimeout(() => {
+                    const confetti = document.createElement('div');
+                    confetti.style.position = 'fixed';
+                    confetti.style.left = Math.random() * 100 + '%';
+                    confetti.style.top = '-50px';
+                    confetti.style.fontSize = '2em';
+                    confetti.style.zIndex = '9999';
+                    confetti.innerHTML = emojis[Math.floor(Math.random() * emojis.length)];
+
+                    const duration = Math.random() * 2 + 3;
+                    const rotation = Math.random() * 720 - 360;
+
+                    confetti.animate([
+                        { transform: 'translateY(0) rotate(0deg)', opacity: 1 },
+                        { transform: `translateY(100vh) rotate(${rotation}deg)`, opacity: 0 }
+                    ], {
+                        duration: duration * 1000,
+                        easing: 'linear'
+                    });
+
+                    document.body.appendChild(confetti);
+
+                    setTimeout(() => confetti.remove(), duration * 1000);
+                }, i * 40);
+            }
+        }
+
+        // Reset to setup
+        function resetToSetup() {
+            if (confirm('Czy na pewno chcesz wrócić do edycji? Postęp losowania zostanie utracony.')) {
+                state.assignments = [];
+                state.currentIndex = 0;
+                state.hasDrawn = [];
+                saveState();
+                showScreen('setup-screen');
+            }
+        }
+
+        // Show summary
+        function showSummary() {
+            renderSummary();
+            showScreen('summary-screen');
+        }
+
+        // Render summary
+        function renderSummary() {
+            const list = document.getElementById('summary-list');
+
+            const christmasColors = [
+                'from-red-500 to-red-600',
+                'from-green-600 to-green-700',
+                'from-red-600 to-green-600',
+                'from-emerald-500 to-teal-600',
+                'from-rose-500 to-red-600',
+                'from-lime-600 to-green-600'
+            ];
+
+            list.innerHTML = state.participants.map((person, index) => {
+                const recipient = state.assignments[index];
+                return `
+                    <div class="bg-gradient-to-r ${christmasColors[index % christmasColors.length]} text-white px-4 py-3 rounded-xl shadow-md">
+                        <div class="flex items-center justify-between">
+                            <span class="font-semibold">${escapeHtml(person)}</span>
+                            <span class="text-sm opacity-75">→</span>
+                            <span class="font-bold">${escapeHtml(recipient)}</span>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Reset all
+        function resetAll() {
+            if (confirm('Czy na pewno chcesz zacząć od nowa? Wszystkie dane zostaną usunięte.')) {
+                localStorage.removeItem('secret-santa-state-christmas');
+                state = {
+                    participants: [],
+                    assignments: [],
+                    currentIndex: 0,
+                    hasDrawn: []
+                };
+                showScreen('setup-screen');
+                renderParticipants();
+                updateStartButton();
+            }
+        }
+
+        // Show screen
+        function showScreen(screenId) {
+            document.querySelectorAll('.screen').forEach(screen => {
+                screen.classList.add('hidden');
+            });
+            document.getElementById(screenId).classList.remove('hidden');
+        }
+
+        // Helper: escape HTML
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Initialize on load
+        init();
+    </script>
+</body>
+</html>
