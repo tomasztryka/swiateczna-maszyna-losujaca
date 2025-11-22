@@ -265,9 +265,223 @@
                 padding: 1.25rem !important;
             }
         }
+
+        /* Toast notifications */
+        .toast-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 10000;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            max-width: 400px;
+        }
+
+        .toast {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+            border-radius: 16px;
+            padding: 16px 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            animation: toast-slide-in 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            min-width: 280px;
+        }
+
+        .toast.toast-exit {
+            animation: toast-slide-out 0.3s ease-out forwards;
+        }
+
+        .toast-success {
+            border-left: 4px solid #10b981;
+        }
+
+        .toast-error {
+            border-left: 4px solid #ef4444;
+        }
+
+        .toast-warning {
+            border-left: 4px solid #f59e0b;
+        }
+
+        .toast-info {
+            border-left: 4px solid #3b82f6;
+        }
+
+        .toast-icon {
+            font-size: 24px;
+            flex-shrink: 0;
+        }
+
+        .toast-content {
+            flex: 1;
+        }
+
+        .toast-title {
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 2px;
+            font-size: 14px;
+        }
+
+        .toast-message {
+            color: #6b7280;
+            font-size: 13px;
+            line-height: 1.4;
+        }
+
+        @keyframes toast-slide-in {
+            from {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes toast-slide-out {
+            from {
+                transform: translateX(0) scale(1);
+                opacity: 1;
+            }
+            to {
+                transform: translateX(400px) scale(0.9);
+                opacity: 0;
+            }
+        }
+
+        @media (max-width: 640px) {
+            .toast-container {
+                top: 10px;
+                right: 10px;
+                left: 10px;
+                max-width: none;
+            }
+
+            .toast {
+                min-width: auto;
+                width: 100%;
+            }
+        }
+
+        /* Confirm modal */
+        .confirm-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10001;
+            animation: fade-in 0.2s ease-out;
+            padding: 20px;
+            transition: opacity 0.2s ease-out;
+        }
+
+        .confirm-modal {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            border-radius: 20px;
+            padding: 28px;
+            max-width: 420px;
+            width: 100%;
+            animation: modal-slide-in 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .confirm-icon {
+            font-size: 48px;
+            text-align: center;
+            margin-bottom: 16px;
+        }
+
+        .confirm-title {
+            font-size: 20px;
+            font-weight: bold;
+            color: #1f2937;
+            margin-bottom: 12px;
+            text-align: center;
+        }
+
+        .confirm-message {
+            color: #6b7280;
+            font-size: 15px;
+            line-height: 1.5;
+            margin-bottom: 24px;
+            text-align: center;
+        }
+
+        .confirm-buttons {
+            display: flex;
+            gap: 12px;
+        }
+
+        .confirm-button {
+            flex: 1;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 12px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .confirm-button-cancel {
+            background: #f3f4f6;
+            color: #6b7280;
+        }
+
+        .confirm-button-cancel:hover {
+            background: #e5e7eb;
+        }
+
+        .confirm-button-confirm {
+            background: linear-gradient(135deg, #c41e3a 0%, #a01729 100%);
+            color: white;
+            box-shadow: 0 4px 12px rgba(196, 30, 58, 0.3);
+        }
+
+        .confirm-button-confirm:hover {
+            box-shadow: 0 6px 16px rgba(196, 30, 58, 0.4);
+            transform: translateY(-1px);
+        }
+
+        @keyframes fade-in {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes modal-slide-in {
+            from {
+                transform: translateY(-20px) scale(0.95);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0) scale(1);
+                opacity: 1;
+            }
+        }
     </style>
 </head>
 <body class="p-4 md:p-8">
+    <!-- Toast notifications container -->
+    <div class="toast-container" id="toast-container"></div>
+
     <!-- Gradient orbs for depth -->
     <div class="gradient-orb orb-1"></div>
     <div class="gradient-orb orb-2"></div>
@@ -515,6 +729,89 @@
             hasDrawn: []
         };
 
+        // Toast notification system
+        function showToast(message, type = 'info', title = '') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+
+            const icons = {
+                success: '✅',
+                error: '❌',
+                warning: '⚠️',
+                info: 'ℹ️'
+            };
+
+            const titles = {
+                success: title || 'Sukces',
+                error: title || 'Błąd',
+                warning: title || 'Uwaga',
+                info: title || 'Informacja'
+            };
+
+            toast.className = `toast toast-${type}`;
+            toast.innerHTML = `
+                <div class="toast-icon">${icons[type]}</div>
+                <div class="toast-content">
+                    <div class="toast-title">${titles[type]}</div>
+                    <div class="toast-message">${message}</div>
+                </div>
+            `;
+
+            container.appendChild(toast);
+
+            setTimeout(() => {
+                toast.classList.add('toast-exit');
+                setTimeout(() => {
+                    container.removeChild(toast);
+                }, 300);
+            }, 3500);
+        }
+
+        // Confirm dialog system
+        function showConfirm(message, title = 'Potwierdź', icon = '⚠️') {
+            return new Promise((resolve) => {
+                const overlay = document.createElement('div');
+                overlay.className = 'confirm-overlay';
+                overlay.innerHTML = `
+                    <div class="confirm-modal">
+                        <div class="confirm-icon">${icon}</div>
+                        <div class="confirm-title">${title}</div>
+                        <div class="confirm-message">${message}</div>
+                        <div class="confirm-buttons">
+                            <button class="confirm-button confirm-button-cancel" id="confirm-cancel">Anuluj</button>
+                            <button class="confirm-button confirm-button-confirm" id="confirm-ok">Potwierdź</button>
+                        </div>
+                    </div>
+                `;
+
+                document.body.appendChild(overlay);
+
+                const handleConfirm = (result) => {
+                    overlay.style.opacity = '0';
+                    document.removeEventListener('keydown', keyHandler);
+                    setTimeout(() => {
+                        document.body.removeChild(overlay);
+                    }, 200);
+                    resolve(result);
+                };
+
+                const keyHandler = (e) => {
+                    if (e.key === 'Enter') handleConfirm(true);
+                    if (e.key === 'Escape') handleConfirm(false);
+                };
+
+                document.getElementById('confirm-ok').addEventListener('click', () => handleConfirm(true));
+                document.getElementById('confirm-cancel').addEventListener('click', () => handleConfirm(false));
+                overlay.addEventListener('click', (e) => {
+                    if (e.target === overlay) handleConfirm(false);
+                });
+                document.addEventListener('keydown', keyHandler);
+
+                // Focus the confirm button
+                setTimeout(() => document.getElementById('confirm-ok').focus(), 100);
+            });
+        }
+
         // Sound effects using Web Audio API
         function playSound(type) {
             try {
@@ -634,12 +931,12 @@
             }
 
             if (name.length > MAX_NAME_LENGTH) {
-                alert(`Imię za długie! Maksymalnie ${MAX_NAME_LENGTH} znaków 🎄`);
+                showToast(`Imię może mieć maksymalnie ${MAX_NAME_LENGTH} znaków 🎄`, 'warning');
                 return;
             }
 
             if (state.participants.includes(name)) {
-                alert('Ta osoba już jest na liście! 🎄');
+                showToast('Ta osoba już jest na liście! 🎄', 'warning');
                 input.value = '';
                 return;
             }
@@ -707,7 +1004,7 @@
         // Start drawing process
         function startDrawing() {
             if (state.participants.length < 2) {
-                alert('Potrzeba minimum 2 osoby do losowania! 🎄');
+                showToast('Potrzeba minimum 2 osoby do losowania! 🎄', 'warning');
                 return;
             }
 
@@ -855,8 +1152,14 @@
         }
 
         // Reset to setup
-        function resetToSetup() {
-            if (confirm('Czy na pewno chcesz wrócić do edycji? Postęp losowania zostanie utracony.')) {
+        async function resetToSetup() {
+            const confirmed = await showConfirm(
+                'Postęp losowania zostanie utracony.',
+                'Wróć do edycji?',
+                '🔙'
+            );
+
+            if (confirmed) {
                 state.assignments = [];
                 state.currentIndex = 0;
                 state.hasDrawn = [];
@@ -912,15 +1215,21 @@
             text += `\nWesołych Świąt! 🎅🎁`;
 
             navigator.clipboard.writeText(text).then(() => {
-                alert('Wyniki skopiowane do schowka! 📋✨');
+                showToast('Wyniki zostały skopiowane do schowka! 📋', 'success');
             }).catch(() => {
-                alert('Nie udało się skopiować. Spróbuj ponownie.');
+                showToast('Nie udało się skopiować. Spróbuj ponownie.', 'error');
             });
         }
 
         // Reset all
-        function resetAll() {
-            if (confirm('Czy na pewno chcesz zacząć od nowa? Wszystkie dane zostaną usunięte.')) {
+        async function resetAll() {
+            const confirmed = await showConfirm(
+                'Wszystkie dane zostaną usunięte.',
+                'Zacząć od nowa?',
+                '🔄'
+            );
+
+            if (confirmed) {
                 localStorage.removeItem('secret-santa-state-christmas');
                 state = {
                     participants: [],
