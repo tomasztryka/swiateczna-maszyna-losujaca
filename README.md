@@ -37,33 +37,8 @@ Aplikacja pozwala na sprawiedliwe losowanie kto komu kupuje prezent, z gwarancj�
 
 ### 3. Gotowe!
 - Gdy wszyscy wylosują, pojawi się ekran końcowy
-- **NOWOŚĆ:** Możesz kliknąć "Pokaż podsumowanie" aby zobaczyć pełną listę kto komu wylosował (tylko dla organizatora!)
+- Możesz kliknąć "Pokaż podsumowanie" aby zobaczyć pełną listę kto komu wylosował (tylko dla organizatora!)
 - Możesz zacząć od nowa klikając "Zacznij od nowa"
-
-## 🌐 Wrzucanie na GitHub Pages
-
-### Sposób 1: Przez GitHuba (najłatwiejszy)
-
-1. Stwórz nowe repozytorium na GitHubie
-2. Wrzuć plik `index.html` do głównego katalogu repo
-3. Idź do Settings → Pages
-4. W sekcji "Source" wybierz `main` branch
-5. Kliknij Save
-6. Twoja aplikacja będzie dostępna pod adresem: `https://TWOJ-USERNAME.github.io/NAZWA-REPO/`
-
-### Sposób 2: Przez terminal
-
-```bash
-# W katalogu projektu
-git init
-git add index.html README.md
-git commit -m "Initial commit: Świąteczna Maszyna Losująca"
-git branch -M main
-git remote add origin https://github.com/TWOJ-USERNAME/NAZWA-REPO.git
-git push -u origin main
-
-# Włącz GitHub Pages w ustawieniach repozytorium
-```
 
 ## 🎨 Technologia
 
@@ -92,5 +67,3 @@ Aplikacja używa algorytmu **derangement** - czyli permutacji gdzie żaden eleme
 - **Reset**: W każdej chwili możesz zacząć od nowa
 
 ## 🎁 Miłego losowania!
-
-Życzymy udanych Świąt i fajnych prezentów! 🎄✨
