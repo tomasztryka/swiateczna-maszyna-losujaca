@@ -596,6 +596,33 @@
                             <span class="star" style="animation-delay: 0.3s">⭐</span>
                             <span class="star" style="animation-delay: 0.6s">✨</span>
                         </div>
+
+                        <!-- Budget voting slider -->
+                        <div class="mt-6 md:mt-8 pt-6 md:pt-8 border-t-2 border-gray-200/50">
+                            <p class="text-sm md:text-lg text-gray-700 mb-3 md:mb-4 font-medium">💰 Proponowana kwota prezentu:</p>
+                            <div class="flex items-center justify-center gap-3 md:gap-4 mb-3">
+                                <span class="text-xl md:text-3xl font-bold text-green-700" id="budget-display">100 zł</span>
+                            </div>
+                            <input
+                                type="range"
+                                id="budget-slider"
+                                min="50"
+                                max="300"
+                                step="50"
+                                value="100"
+                                class="w-full h-3 bg-gradient-to-r from-green-200 via-yellow-200 to-red-200 rounded-lg appearance-none cursor-pointer accent-green-600"
+                                oninput="updateBudgetDisplay()"
+                            >
+                            <div class="flex justify-between text-xs md:text-sm text-gray-600 mt-2">
+                                <span>50 zł</span>
+                                <span>100 zł</span>
+                                <span>150 zł</span>
+                                <span>200 zł</span>
+                                <span>250 zł</span>
+                                <span>300 zł</span>
+                            </div>
+                            <p class="text-xs md:text-sm text-gray-500 mt-3 italic">Twój głos jest anonimowy i pomoże ustalić wspólny budżet</p>
+                        </div>
                     </div>
                 </div>
 
@@ -669,6 +696,12 @@
                         📋 Pokaż podsumowanie (tylko dla organizatora!)
                     </button>
                     <button
+                        onclick="showBudgetStats()"
+                        class="w-full bg-gradient-to-r from-green-600 to-emerald-600 text-white px-6 md:px-8 py-3.5 md:py-5 rounded-xl md:rounded-2xl font-bold text-sm md:text-lg hover:from-green-700 hover:to-emerald-700 transition-all transform hover:scale-105 shadow-lg"
+                    >
+                        💰 Pokaż statystyki budżetu
+                    </button>
+                    <button
                         onclick="resetAll()"
                         class="w-full btn-primary text-white px-6 md:px-8 py-3.5 md:py-5 rounded-xl md:rounded-2xl font-semibold text-sm md:text-lg transition-all transform hover:scale-105"
                     >
@@ -718,6 +751,53 @@
             </div>
         </div>
 
+        <!-- Screen 5: Budget Stats - Statystyki budżetu -->
+        <div id="budget-stats-screen" class="screen hidden">
+            <div class="glass-card rounded-2xl md:rounded-3xl p-6 md:p-10 bounce-in">
+                <div class="text-center mb-6 md:mb-8">
+                    <div class="text-4xl md:text-6xl mb-2 md:mb-3">💰</div>
+                    <h2 class="text-2xl md:text-4xl font-bold christmas-gradient-text mb-3 px-2">
+                        Statystyki budżetu prezentów
+                    </h2>
+                    <p class="text-xs md:text-sm text-gray-600 px-2">Anonimowe głosowanie - wyniki zbiorowe</p>
+                </div>
+
+                <!-- Główne statystyki -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4 mb-6 md:mb-8">
+                    <div class="glass-card-alt rounded-xl p-4 md:p-5 text-center">
+                        <p class="text-xs md:text-sm text-gray-600 mb-1 md:mb-2">Średnia kwota</p>
+                        <p class="text-2xl md:text-4xl font-bold text-green-700" id="avg-budget">---</p>
+                    </div>
+                    <div class="glass-card-alt rounded-xl p-4 md:p-5 text-center">
+                        <p class="text-xs md:text-sm text-gray-600 mb-1 md:mb-2">Minimum</p>
+                        <p class="text-2xl md:text-4xl font-bold text-blue-700" id="min-budget">---</p>
+                    </div>
+                    <div class="glass-card-alt rounded-xl p-4 md:p-5 text-center">
+                        <p class="text-xs md:text-sm text-gray-600 mb-1 md:mb-2">Maksimum</p>
+                        <p class="text-2xl md:text-4xl font-bold text-red-700" id="max-budget">---</p>
+                    </div>
+                </div>
+
+                <!-- Histogram głosów -->
+                <div class="mb-6 md:mb-8">
+                    <h3 class="text-lg md:text-xl font-bold text-gray-800 mb-4 md:mb-5 text-center">Rozkład głosów</h3>
+                    <div id="budget-histogram" class="space-y-3 md:space-y-4">
+                        <!-- Dynamicznie generowane -->
+                    </div>
+                </div>
+
+                <!-- Przyciski -->
+                <div class="space-y-2.5 md:space-y-3">
+                    <button
+                        onclick="showScreen('complete-screen')"
+                        class="w-full btn-secondary text-white px-6 md:px-8 py-3.5 md:py-4 rounded-xl md:rounded-2xl font-semibold text-sm md:text-lg transition-all transform hover:scale-105"
+                    >
+                        ← Wróć
+                    </button>
+                </div>
+            </div>
+        </div>
+
     </div>
 
     <script>
@@ -726,7 +806,8 @@
             participants: [],
             assignments: [],
             currentIndex: 0,
-            hasDrawn: []
+            hasDrawn: [],
+            budgetVotes: [] // {person: string, amount: number}
         };
 
         // Toast notification system
@@ -1012,6 +1093,7 @@
             state.assignments = generateDerangement(state.participants);
             state.currentIndex = 0;
             state.hasDrawn = [];
+            state.budgetVotes = [];
             saveState();
 
             showScreen('drawing-screen');
@@ -1067,6 +1149,22 @@
             document.getElementById('result-container').classList.add('hidden');
             document.getElementById('draw-button').classList.remove('hidden');
             document.getElementById('next-button').classList.add('hidden');
+
+            // Reset budget slider to default
+            const slider = document.getElementById('budget-slider');
+            if (slider) {
+                slider.value = 100;
+                updateBudgetDisplay();
+            }
+        }
+
+        // Update budget display
+        function updateBudgetDisplay() {
+            const slider = document.getElementById('budget-slider');
+            const display = document.getElementById('budget-display');
+            if (slider && display) {
+                display.textContent = `${slider.value} zł`;
+            }
         }
 
         // Perform draw
@@ -1102,6 +1200,18 @@
 
         // Next person
         function nextPerson() {
+            // Save budget vote
+            const slider = document.getElementById('budget-slider');
+            const currentPerson = state.participants[state.currentIndex];
+            if (slider && currentPerson) {
+                const amount = parseInt(slider.value);
+                state.budgetVotes.push({
+                    person: currentPerson,
+                    amount: amount
+                });
+                saveState();
+            }
+
             state.currentIndex++;
 
             if (state.currentIndex >= state.participants.length) {
@@ -1163,6 +1273,7 @@
                 state.assignments = [];
                 state.currentIndex = 0;
                 state.hasDrawn = [];
+                state.budgetVotes = [];
                 saveState();
                 showScreen('setup-screen');
             }
@@ -1221,6 +1332,78 @@
             });
         }
 
+        // Show budget stats
+        function showBudgetStats() {
+            if (!state.budgetVotes || state.budgetVotes.length === 0) {
+                showToast('Brak danych o głosowaniu na kwoty! 💰', 'warning');
+                return;
+            }
+
+            playSound('reveal');
+            renderBudgetStats();
+            showScreen('budget-stats-screen');
+        }
+
+        // Render budget statistics
+        function renderBudgetStats() {
+            if (!state.budgetVotes || state.budgetVotes.length === 0) {
+                return;
+            }
+
+            // Calculate statistics
+            const amounts = state.budgetVotes.map(v => v.amount);
+            const sum = amounts.reduce((acc, val) => acc + val, 0);
+            const avg = Math.round(sum / amounts.length);
+            const min = Math.min(...amounts);
+            const max = Math.max(...amounts);
+
+            // Update stats display
+            document.getElementById('avg-budget').textContent = `${avg} zł`;
+            document.getElementById('min-budget').textContent = `${min} zł`;
+            document.getElementById('max-budget').textContent = `${max} zł`;
+
+            // Create histogram data
+            const buckets = [50, 100, 150, 200, 250, 300];
+            const counts = {};
+            buckets.forEach(bucket => counts[bucket] = 0);
+            amounts.forEach(amount => {
+                if (counts[amount] !== undefined) {
+                    counts[amount]++;
+                }
+            });
+
+            const maxCount = Math.max(...Object.values(counts));
+            const histogram = document.getElementById('budget-histogram');
+
+            histogram.innerHTML = buckets.map(bucket => {
+                const count = counts[bucket];
+                const percentage = maxCount > 0 ? (count / maxCount) * 100 : 0;
+                const barColors = {
+                    50: 'from-green-500 to-green-600',
+                    100: 'from-emerald-500 to-emerald-600',
+                    150: 'from-yellow-500 to-yellow-600',
+                    200: 'from-orange-500 to-orange-600',
+                    250: 'from-red-500 to-red-600',
+                    300: 'from-rose-500 to-rose-600'
+                };
+
+                return `
+                    <div class="space-y-1 md:space-y-2">
+                        <div class="flex items-center justify-between text-xs md:text-sm text-gray-700">
+                            <span class="font-semibold">${bucket} zł</span>
+                            <span class="text-gray-600">${count} ${count === 1 ? 'głos' : count < 5 ? 'głosy' : 'głosów'}</span>
+                        </div>
+                        <div class="relative w-full bg-gray-200 rounded-full h-6 md:h-8 overflow-hidden">
+                            <div class="absolute inset-0 bg-gradient-to-r ${barColors[bucket]} transition-all duration-500 rounded-full flex items-center justify-end pr-2 md:pr-3"
+                                 style="width: ${percentage}%">
+                                ${count > 0 ? `<span class="text-white font-bold text-xs md:text-sm">${count}</span>` : ''}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
         // Reset all
         async function resetAll() {
             const confirmed = await showConfirm(
@@ -1235,7 +1418,8 @@
                     participants: [],
                     assignments: [],
                     currentIndex: 0,
-                    hasDrawn: []
+                    hasDrawn: [],
+                    budgetVotes: []
                 };
                 showScreen('setup-screen');
                 renderParticipants();
